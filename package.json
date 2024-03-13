@@ -1,0 +1,17 @@
+{
+  "name": "playtube",
+  "version": "1.0.0",
+  "description": "Backend Learning series with project Playtube's Backend ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Javascript",
+    "Node.js",
+    "Express.js",
+    "Playtube"
+  ],
+  "author": "MeluSahu",
+  "license": "ISC"
+}
