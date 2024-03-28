@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Backend Learning series with project Playtube's Backend ",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js"
   },
   "keywords": [
     "Javascript",
@@ -13,5 +14,11 @@
     "Playtube"
   ],
   "author": "MeluSahu",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
 }
