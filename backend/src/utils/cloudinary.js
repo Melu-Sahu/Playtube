@@ -22,11 +22,12 @@ const uploadOnCloudinary = async (localFilePath) => {
     });
 
     // console.log("Response", response);
+    fs.unlinkSync(localFilePath);
     return response;
   } catch (error) {
     fs.unlinkSync(localFilePath); // remove the file from local saved file as the upload option got failed.
     return null;
-  }             // finally we should unlilnk the file from our server, so we write it later. maybe some change need while learning
+  } // finally we should unlilnk the file from our server, so we write it later. maybe some change need while learning
 };
 
 export { uploadOnCloudinary };
