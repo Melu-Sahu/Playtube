@@ -71,7 +71,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
   // const coverImageLocalPath = req.files?.coverImage[0]?.path;
-  
+
   let coverImageLocalPath;
   if (
     req.files &&
@@ -122,16 +122,125 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "User Registered Successfully."));
 });
 
+//Login Controller.
+
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password, username } = req.body;
 
-  if (!username || !email) {
-    throw new ApiError(400, "username or email is required.");
+  // Todo's
+  // get user details
 
-    const user = await User.findOne({
-      $or: [{ username }, { email }],
-    });
+  const { email, username, password } = req.body;
+
+  // console.log("email", email);
+  // console.log("username", username);
+  // console.log("password", password);
+
+  // if (!username && !email) {
+  //   throw new ApiError(400, "username or email is required....");
+  // }
+
+  if (!(username || email)) {
+    throw new ApiError(400, "username or email is required.....");
   }
+
+  const user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+
+  // console.log("User", user);
+
+  if (!user) {
+    throw new ApiError(404, "User not found. Please register.");
+  }
+
+  const isPasswordValild = await user.isPasswordCorrect(password);
+
+  // console.log("ispasswordvalid",isPasswordValild);
+
+  if (!isPasswordValild) {
+    throw new ApiError(401, "Invalid user credentials.");
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
+
+  // console.log("Accesstoken", accessToken);
+  // console.log("Accesstoken", refreshToken);
+
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  // console.log("Loggedin user", loggedInUser);
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        { user: loggedInUser, accessToken, refreshToken },
+        "User logged in successfylly."
+      )
+    );
 });
 
-export { registerUser, loginUser };
+// Logout
+
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged out."));
+});
+
+
+
+
+// Generate Access and refresh tokens.
+const generateAccessAndRefreshTokens = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+   
+    
+    user.refreshToken = refreshToken;
+    
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "something went wrong while generating access & refresh token."
+    );
+  }
+};
+
+export { registerUser, loginUser, logoutUser };
